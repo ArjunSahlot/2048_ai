@@ -6,6 +6,7 @@ from board import expectiminimax, Board
 from pynput.keyboard import Listener
 import threading
 from random_utils.funcs import crash
+from copy import deepcopy
 
 
 resolution = int(input("Resolution of board: "))
@@ -24,7 +25,9 @@ def monitor_keys():
 
 
 def move():
-    move = get_best_move(get_board())
+    board = get_board()
+    move = get_best_move(board)
+    print(np.array(board), move)
     if move is not None:
         pyautogui.press(move)
 
@@ -54,7 +57,7 @@ def get_board():
     for tile in [0, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]:
         template = cv2.imread(os.path.join(os.path.dirname("__file__"), "tiles", str(tile) + ".png"), cv2.IMREAD_GRAYSCALE)
         res = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
-        locations = np.where(res >= .85)[::-1]
+        locations = np.where(res >= .75)[::-1]
         for location in zip(*locations):
             tiles[round(location[1] / 100), round(location[0] / 100)] = tile
     tiles = [v for _, v in sorted(tiles.items())]
@@ -68,7 +71,17 @@ def get_board():
 
 
 def get_best_move(board):
-    return expectiminimax(Board(board), 6)[1]
+    board = Board(board)
+    best = float("-inf")
+    best_m = None
+    for move in board.possible_moves():
+        tmp = deepcopy(board)
+        tmp.move(move)
+        if (eval := expectiminimax(tmp, 6)) > best:
+            best = eval
+            best_m = move
+
+    return best_m
 
 
 threading.Thread(target=monitor_keys).start()
