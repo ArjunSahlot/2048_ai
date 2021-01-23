@@ -11,7 +11,7 @@ class Board:
         if board == [[0 for _ in range(4)] for _ in range(4)]:
             for _ in range(2):
                 self.add_tile()
-    
+
     def move(self, dir, on_self=True):
         set_line, get_line, line_range = self.set_col, self.get_col, range(self.cols)
         if dir in ("left", "right"):
@@ -73,7 +73,7 @@ class Board:
 
     def set_row(self, ind, line):
         self.board[ind] = line[:]
-    
+
     def evaluate(self):
         return len(self.get_empty_cells())
 
@@ -105,7 +105,7 @@ class Board:
 
         if dir in ("left", "up"):
             return full_line + [0] * (len(line) - len(full_line))
-        
+
         return [0] * (len(line) - len(full_line)) + full_line
 
     def __repr__(self):
@@ -125,7 +125,7 @@ def get_all_moves(board: Board):
         b = Board(board.board)
         b.move(move)
         moves.append((b, move))
-    
+
     return moves
 
 
