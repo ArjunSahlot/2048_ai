@@ -9,9 +9,6 @@ class Board:
         self.cols = len(board[0])
         self.score = score
         self.player_move = True
-        if board == [[0 for _ in range(4)] for _ in range(4)]:
-            for _ in range(2):
-                self.add_tile()
 
     def move(self, dir, on_self=True):
         set_line, get_line, line_range = self.set_col, self.get_col, range(self.cols)
