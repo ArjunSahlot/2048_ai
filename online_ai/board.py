@@ -1,4 +1,5 @@
 import random
+from copy import deepcopy
 
 
 class Board:
@@ -7,7 +8,7 @@ class Board:
         self.rows = len(board)
         self.cols = len(board[0])
         self.score = score
-        self.prev_move = None
+        self.player_move = True
         if board == [[0 for _ in range(4)] for _ in range(4)]:
             for _ in range(2):
                 self.add_tile()
@@ -34,18 +35,21 @@ class Board:
 
             self.score += points
 
-        if not on_self and moved:
-            self.add_tile()
-            self.prev_move = dir
+        self.player_move = not moved
 
         if not on_self:
             return False
 
-    def add_tile(self, choices=(2, 4), weights=(1, .1)):
+    def add_tile(self):
         if self.get_empty_cells():
-            val = random.choices(choices, weights, k=1)[0]
             pos = random.choice(self.get_empty_cells())
-            self.board[pos[0]][pos[1]] = val
+            self.rand_tile(pos)
+            self.player_move = True
+
+    def rand_tile(self, pos, choices=(2, 4), weights=(.9, .1)):
+        val = random.choices(choices, weights, k=1)[0]
+        self.board[pos[0]][pos[1]] = val
+        return weights[choices.index(val)]
 
     def possible_moves(self):
         moves = ["left", "right", "up", "down"]
@@ -57,6 +61,21 @@ class Board:
             moves.remove(r)
 
         return moves
+
+    def generate_children(self):
+        children = []
+        if self.player_move:
+            for move in self.possible_moves():
+                tmp = deepcopy(self)
+                tmp.move(move)
+                children.append(tmp)
+        else:
+            for pos in self.get_empty_cells():
+                tmp = deepcopy(self)
+                prob = tmp.rand_tile(pos)
+                children.append((tmp, prob))
+
+        return children
 
     def get_empty_cells(self):
         return [(row, col) for col in range(self.cols) for row in range(self.cols) if not self.board[row][col]]
@@ -119,36 +138,17 @@ class Board:
         return string.strip()
 
 
-def get_all_moves(board: Board):
-    moves = []
-    for move in board.possible_moves():
-        b = Board(board.board)
-        b.move(move)
-        moves.append((b, move))
+def expectiminimax(node: Board, depth):
+    if depth == 0 or node.is_full():
+        return node.evaluate()
 
-    return moves
-
-
-def expectiminimax(board: Board, depth, max_player=True):
-    if depth == 0 or board.is_full():
-        return board.evaluate(), board.prev_move
-
-    if max_player:
-        max_eval = float("-inf")
-        best_move = None
-        for board_pos, move in get_all_moves(board):
-            evaluation = expectiminimax(board_pos, depth-1, False)[0]
-            if evaluation > max_eval:
-                max_eval = evaluation
-                best_move = move
-        return max_eval, best_move
+    if node.player_move:
+        a = float("inf")
+        for child in node.generate_children():
+            a = min(a, expectiminimax(child, depth-1))
     else:
-        min_eval = float("inf")
-        best_move = None
-        for board_pos, move in get_all_moves(board):
-            evaluation = expectiminimax(board_pos, depth-1)[0]
-            if evaluation < min_eval:
-                min_eval = evaluation
-                best_move = move
+        a = 0
+        for child, prob in node.generate_children():
+            a += prob * expectiminimax(child, depth-1)
 
-        return min_eval, best_move
+    return a
