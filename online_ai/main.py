@@ -55,16 +55,18 @@ def get_board():
     board = [[0 for _ in range(resolution)] for _ in range(resolution)]
     screen = cv2.cvtColor(np.array(pyautogui.screenshot(region=game_rect)), cv2.COLOR_BGR2GRAY)
     for tile in [0, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]:
-        template = cv2.imread(os.path.join(os.path.dirname("__file__"), "tiles", str(tile) + ".png"), cv2.IMREAD_GRAYSCALE)
+        template = cv2.imread(os.path.join(os.path.dirname("__file__"), "tiles", f"{tile}.png"), cv2.IMREAD_GRAYSCALE)
         res = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
-        locations = np.where(res >= .75)[::-1]
+        locations = np.where(res >= .8)[::-1]
         for location in zip(*locations):
-            tiles[round(location[1] / 100), round(location[0] / 100)] = tile
+            tiles[round(location[1] / 120), round(location[0] / 120)] = tile
+
     tiles = [v for _, v in sorted(tiles.items())]
     for i, tile in enumerate(tiles):
         try:
             board[i // resolution][i % resolution] = tile
         except IndexError:
+            print("AAAAAAAAAAAAAA")
             return [[0 for _ in range(resolution)] for _ in range(resolution)]
 
     return board
