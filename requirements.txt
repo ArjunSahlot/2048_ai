@@ -1,0 +1,6 @@
+pygame
+opencv-python
+pyautogui
+numpy
+pynput
+random-utils
